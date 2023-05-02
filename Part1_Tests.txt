@@ -1,0 +1,81 @@
+1.	Valid request with a single gate (note that an amount of 0 has been considered as a valid result although this does not correspond to a physical state change of the qubit): 
+
+   a. Post Request: { "circuit": [ { "axis": "X", "amount": 90 } ] }     # X axis
+      Expected Response: { "status": "completed", "job_id": "0", "result": { "0": 203, "1": 797 } }
+   b. Post Request: { "circuit": [ { "axis": "Y", "amount": -90 } ] }    # Y axis
+      Expected Response: { "status": "completed", "job_id": "1", "result": { "0": 203, "1": 797 } }
+   c. Post Request: { "circuit": [ { "axis": "Z", "amount": 0 } ] }      # Z axis
+      Expected Response: { "status": "completed", "job_id": "2", "result": { "0": 203, "1": 797 } }
+
+2.	Valid request with a multiple gates (): 
+	
+   a. Post Request: { "circuit": [ { "axis": "X", "amount": 180 }, { "axis": "Y", "amount": -90 } ] }  # Two different gates
+      Expected Response: { "status": "completed", "job_id": "3", "result": { "0": 203, "1": 797 } }
+   b. Post Request: { "circuit": [ { "axis": "X", "amount": 180 }, { "axis": "X", "amount": -180 } ] } # Two similar gates (but with opposite amounts)
+	Expected Response: { "status": "completed", "job_id": "4", "result": { "0": 203, "1": 797 } }
+   c. Post Request: { "circuit": [ { "axis": "X", "amount": 90 }, { "axis": "Y", "amount": 90 }, { "axis": "Z", "amount": 180 } ] }  # Three gates
+      Expected Response: { "status": "completed", "job_id": "5", "result": { "0": 203, "1": 797 } }
+   d. Post Request: { "circuit": [ { "axis": "X", "amount": 90 }, { "axis": "Y", "amount": 90 }, { "axis": "Z", "amount": 180 }, { "axis": "X", "amount": -90 } ] }  # Four gates
+      Expected Response: { "status": "completed", "job_id": "6", "result": { "0": 203, "1": 797 } }
+
+
+3.	Invalid request with empty circuit:
+
+   a. Post Request: {}   # Empty request body
+	Expected Response: { "error_code": 400, "error_reason": "Invalid circuit format. The circuit must be a non-empty list." }
+   b. Post Request: { "circuit": [] }  # Empty circuit
+	Expected Response: { "error_code": 400, "error_reason": "Invalid circuit format. The circuit must be a non-empty list." }
+
+
+4.    Invalid request with invalid circuit data type:
+
+   a. Post Request: { "circuit": "invalid" }   # string
+	Expected Response: { "error_code": 400, "error_reason": "Invalid circuit format. The circuit must be a non-empty list." }
+   b. Post Request: { "circuit": 123 }   # integer
+	Expected Response: { "error_code": 400, "error_reason": "Invalid circuit format. The circuit must be a non-empty list." }
+
+
+5.	Invalid request with invalid gate format: 
+
+   a. Post Request: { "circuit": [ "invalid_gate_format" ] }
+	Expected Response: { "error_code": 400, "error_reason": "Invalid gate format at index 0. The gate must be a dictionary." }
+   b. Post Request: { "circuit": [ { "axis": "X" } ] }
+	Expected Response: { "error_code": 400, "error_reason": "Invalid gate at index 0. The gate must have 'axis' and 'amount' keys only." }
+   c. Post Request: { "circuit": [ { "amount": 90 } ] }
+	Expected Response: { "error_code": 400, "error_reason": "Invalid gate at index 0. The gate must have 'axis' and 'amount' keys only." }
+
+
+6.	Invalid request with unknown gate key: 
+
+   a. Post Request: { "circuit": [ { "unknown_key": "value" } ] }
+	Expected Response: { "error_code": 400, "error_reason": "Invalid gate at index 0. The gate must have 'axis' and 'amount' keys only." }
+   b. Post Request: { "circuit": [ { "axis": "X", "amount": 90, "unknown_key": "value" } ] }
+	Expected Response: { "error_code": 400, "error_reason": "Invalid gate at index 0. The gate must have 'axis' and 'amount' keys only." }
+
+
+7.	Invalid request with invalid axis value:
+ 
+   a. Post Request: { "circuit": [ { "axis": "A", "amount": 90 } ] }
+	Expected Response: { "error_code": 400, "error_reason": "Invalid axis value at index 0. The axis must be 'X', 'Y', or 'Z'." }
+   b. Post Request: { "circuit": [ { "axis": "XYZ", "amount": 180 } ] }
+	Expected Response: { "error_code": 400, "error_reason": "Invalid axis value at index 0. The axis must be 'X', 'Y', or 'Z'." }
+
+
+8. 	Invalid request with non-integer amount:
+
+   a. Post Request: { "circuit": [ { "axis": "X", "amount": 18.5 } ] }
+      Expected Response: { "error_code": 400, "error_reason": "Invalid amount value at index 0. The amount must be an integer." }
+   b. Post Request: { "circuit": [ { "axis": "X", "amount": "one" } ] }
+      Expected Response: { "error_code": 400, "error_reason": "Invalid amount value at index 0. The amount must be an integer." }
+
+9. 	Invalid request with multiple errors:
+
+   a. Post Request: { "circuit": [ "invalid_gate_format", { "axis": "A", "amount": 1.5 } ] }
+      Expected Response: { "error_code": 400, "error_reason": "Invalid gate format at index 0. The gate must be a dictionary." }
+   b. Post Request: { "circuit": [ { "axis": "A", "amount": 90 }, { "amount": "one" } ] }
+      Expected Response: { "error_code": 400, "error_reason": "Invalid axis value at index 0. The axis must be 'X', 'Y', or 'Z'." }
+
+10. 	Invalid request with unexpected error: (by explicitly raising a 500 error in the code to ensure the try-except works as required)
+
+   a. Post Request: { "circuit": [ { "axis": "X", "amount": 90 } ] }
+      Expected Response: { "error_code": 500, "error_reason": "Unexpected error occurred while processing the circuit." }

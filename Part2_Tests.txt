@@ -1,0 +1,21 @@
+1.	Valid GET request with a valid job_id:
+   1a. Post Request: { "circuit": [ { "axis": "X", "amount": 90 } ] } # create a new job
+	 Expected Response: { "status": "completed", "job_id": "0", "result": { "0": 203, "1": 797 } }
+   1b. GET Request: curl http://localhost:5000/job/0
+	 Expected Response: { "status": "completed", "job_id": "0", "circuit": [ { "axis": "X", "amount": 90 } ], "result": { "0": 203, "1": 797 } }
+   2a. Post Request: { "circuit": [ { "axis": "Y", "amount": -90 } ] } # create a new job
+	 Expected Response: { "status": "completed", "job_id": "1", "result": { "0": 203, "1": 797 } }
+   2b. GET Request: curl http://localhost:5000/job/1
+	 Expected Response: { "status": "completed", "job_id": "1", "circuit": [ { "axis": "Y", "amount": -90 } ], "result": { "0": 203, "1": 797 } }
+
+2.	Invalid GET request with an invalid job_id: 
+    1. GET Request: curl http://localhost:5000/job/999 # job_id does not exist
+	 Expected Response: { "error_code": 404, "error_reason": "Job ID 999 not found." }
+    2. GET Request: curl http://localhost:5000/job/invalid  # string
+	 Expected Response: { "error_code": 404, "error_reason": "Job ID invalid not found." }
+    3. GET Request: curl http://localhost:5000/job/ # empty job_id
+	 Expected Response: { "error_code": 404, "error_reason": "Bad request." }
+    4. GET Request: curl http://localhost:5000/job/0/ # incorrect syntax
+	 Expected Response: { "error_code": 404, "error_reason": "Bad request." }
+
+
